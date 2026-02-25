@@ -11,17 +11,15 @@ st.set_page_config(
 
 # --- LOAD CSS ---
 def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    try:
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        pass # Silently fail or add st.warning if you prefer
 
-# Ensure styles.css is in the same directory
-try:
-    local_css("assets/styles.css")
-except FileNotFoundError:
-    st.warning("styles.css not found. Please ensure it is in the same directory as main.py")
+local_css("assets/styles.css")
 
-# --- FORCE WHITE UPLOADER ---
-# This rigorously overrides Streamlit's dark theme dropzone to match the light UI
+# --- FORCE WHITE UPLOADER & CUSTOM STYLES ---
 st.markdown("""
 <style>
     /* Make the inner section transparent so it blends perfectly with our white dashed border */
@@ -55,6 +53,11 @@ st.markdown("""
         color: #9ca3af !important;
         fill: #9ca3af !important;
     }
+    
+    /* Optional: Style the Save button to be dark gray */
+    button[kind="secondaryFormSubmit"], button[kind="secondary"] {
+        /* Add your dark gray button styles here if you want it to match perfectly */
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,7 +67,8 @@ if 'upload_state' not in st.session_state:
 if 'progress' not in st.session_state:
     st.session_state.progress = 0
 
-# --- NAVBAR (Custom HTML matching image_3fd29e) ---
+
+# --- NAVBAR (Custom HTML) ---
 navbar_html = """
 <div class="custom-navbar">
     <div class="nav-left">
@@ -84,12 +88,11 @@ navbar_html = """
 </div>
 """
 st.markdown(navbar_html, unsafe_allow_html=True)
-
 # --- HERO SECTION ---
 st.markdown("""
-<div class="hero-section">
-    <h1 class="hero-title">3D Point Cloud <span style="color:#2563eb">Upload</span></h1>
-    <p class="hero-subtitle">Upload your 3D point cloud files for AI-powered segmentation and rendering</p>
+<div style="text-align: center; margin-bottom: 2rem;">
+    <h1 style="margin-bottom: 0;">3D Point Cloud <span style="color:#2563eb">Upload</span></h1>
+    <p style="color: #6b7280; font-size: 1.1rem; margin-top: 0.5rem;">Upload your 3D point cloud files for AI-powered segmentation and rendering</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -98,26 +101,36 @@ with st.container(border=True):
     
     if st.session_state.upload_state == 'idle':
         # Card Headers
-        st.markdown('<p class="card-title">Upload Your File</p>', unsafe_allow_html=True)
-        st.markdown('<p class="card-desc">Select a 3D point cloud file to begin</p>', unsafe_allow_html=True)
+        st.subheader("Upload Your File")
+        st.caption("Select a 3D point cloud file to begin")
         
         # Streamlit File Uploader
         uploaded_file = st.file_uploader("Dropzone", type=['las', 'ply', 'pcd'], label_visibility="collapsed")
         
+        st.write("") # Spacer
+        
         # Exact Email Notifications Box Layout
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.markdown('''
-            <div class="email-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                Email Notifications
-            </div>
-            ''', unsafe_allow_html=True)
-        with col2:
-            notify = st.toggle("Enable", label_visibility="collapsed")
-            
-        if notify:
-            email_address = st.text_input("Email Address", placeholder="your.email@example.com", label_visibility="collapsed")
+        with st.container(border=True):
+            col1, col2 = st.columns([10, 1])
+            with col1:
+                st.markdown("<p style='margin-top: 8px; font-weight: 600;'>✉️ Email Notifications</p>", unsafe_allow_html=True)
+            with col2:
+                notify = st.toggle("Enable", label_visibility="collapsed")
+                
+            if notify:
+                st.markdown("**Email Address**")
+                
+                # Align input and button side-by-side
+                input_col, btn_col = st.columns([5, 1])
+                with input_col:
+                    email_address = st.text_input("Email Address", placeholder="your.email@example.com", label_visibility="collapsed")
+                with btn_col:
+                    if st.button("Save", use_container_width=True):
+                        st.toast(f"Email saved: {email_address}")
+                        
+                st.markdown("<p style='color: gray; font-size: 0.9rem; margin-top: -10px;'>You'll receive an email when the processing is complete</p>", unsafe_allow_html=True)
+
+        st.write("") # Spacer
 
         # Upload Action
         if uploaded_file is not None:
@@ -126,8 +139,8 @@ with st.container(border=True):
                 st.rerun()
 
     elif st.session_state.upload_state == 'uploading':
-        st.markdown('<p class="card-title">Uploading...</p>', unsafe_allow_html=True)
-        st.markdown('<p class="card-desc">Transferring file chunks to secure storage</p>', unsafe_allow_html=True)
+        st.subheader("Uploading...")
+        st.caption("Transferring file chunks to secure storage")
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -142,8 +155,8 @@ with st.container(border=True):
         st.rerun()
 
     elif st.session_state.upload_state == 'processing':
-        st.markdown('<p class="card-title">Processing Point Cloud</p>', unsafe_allow_html=True)
-        st.markdown('<p class="card-desc">AI is classifying and rendering your data</p>', unsafe_allow_html=True)
+        st.subheader("Processing Point Cloud")
+        st.caption("AI is classifying and rendering your data")
         
         with st.status("Pipeline Active", expanded=True) as status:
             st.write("⚙️ Preprocessing (Voxel downsampling, coordinate normalization)...")
@@ -169,3 +182,23 @@ with st.container(border=True):
             if st.button("Upload Another File", use_container_width=True):
                 st.session_state.upload_state = 'idle'
                 st.rerun()
+
+# --- BOTTOM INFO CARDS ---
+if st.session_state.upload_state == 'idle':
+    st.write("") # Spacer
+    card_col1, card_col2, card_col3 = st.columns(3)
+
+    with card_col1:
+        with st.container(border=True):
+            st.markdown("**Supported Formats**")
+            st.caption("LAS, PLY, and PCD formats are fully supported for point cloud processing.")
+
+    with card_col2:
+        with st.container(border=True):
+            st.markdown("**Chunked Uploads**")
+            st.caption("Large files are automatically split into chunks for reliable uploads.")
+
+    with card_col3:
+        with st.container(border=True):
+            st.markdown("**AI Processing**")
+            st.caption("Advanced AI segmentation classifies and analyses your point cloud data.")
