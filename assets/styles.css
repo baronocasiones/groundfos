@@ -1,3 +1,205 @@
-.st-key-file-uploader > div > section > div > div > span{
-    display: hidden;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- Hide Streamlit Branding & Base Adjustments --- */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+.stApp {
+    background-color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Adjust top padding due to hidden header */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 900px !important;
+}
+
+/* --- Navbar Styling (Flat & Clean) --- */
+.custom-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3.5rem;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-logo {
+    background-color: #2563eb;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #111827;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-right: 4px;
+}
+
+.nav-links a:hover {
+    color: #111827;
+}
+
+.nav-links a.active {
+    background-color: #e0e7ff;
+    color: #4f46e5;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.hero-title {
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin-bottom: 8px !important;
+    padding: 0 !important;
+}
+
+.hero-subtitle {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+/* --- Container Overrides (Main Card) --- */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #ffffff;
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    padding: 1.5rem !important;
+}
+
+/* --- Streamlit File Uploader Hack (Dropzone) --- */
+[data-testid="stFileUploader"] {
+    background-color: #ffffff;
+    border: 1.5px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 1rem 1rem;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+[data-testid="stFileUploader"] section {
+    padding: 1rem !important;
+}
+
+/* Hide Streamlit's default file limit text */
+[data-testid="stFileUploader"] small {
+    display: none !important; 
+}
+
+/* --- Text Elements inside cards --- */
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 2px;
+}
+
+.card-desc {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 24px;
+}
+
+/* --- Email Notifications Gray Box --- */
+div[data-testid="stHorizontalBlock"]:has(.email-title) {
+    background-color: #f4f4f5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    align-items: center;
+    margin-top: 1rem;
+    border: 1px solid #f4f4f5;
+}
+
+.email-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #000000;
+    margin: 0;
+}
+
+/* --- Toggle Switch Adjustments --- */
+[data-testid="stToggle"] {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* --- Buttons --- */
+.stButton > button {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s !important;
+}
+
+.stButton > button[kind="primary"] {
+    background-color: #111827 !important;
+    color: white !important;
+    border: none !important;
+    margin-top: 1rem;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #374151 !important;
+}
+
+/* --- Input Fields (If toggle is expanded) --- */
+.stTextInput > div > div > input {
+    border-radius: 8px !important;
+    border-color: #e5e7eb !important;
+    background-color: #ffffff !important;
+    font-size: 14px;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px #3b82f6 !important;
 }
