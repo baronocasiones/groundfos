@@ -189,24 +189,24 @@ with st.container(border=True):
                 st.session_state.upload_state = 'processing'
                 st.rerun()
 
-    # ── PROCESSING (AI segmentation via API) ──────────────────────────────────
+    # ── PROCESSING (segmentation via API) ──────────────────────────────────
     elif st.session_state.upload_state == 'processing':
         st.subheader("Processing Point Cloud")
-        st.caption("AI is classifying and rendering your data")
+        st.caption("Classifying and rendering your data")
 
         with st.status("Pipeline Active", expanded=True) as status:
-            st.write("Sending file to ResPointNet2 segmentation API...")
+            st.write("Sending file to API Segmemtation...")
 
             try:
                 save_path = st.session_state.saved_file_path
                 with open(save_path, "rb") as f:
                     file_bytes = f.read()
 
-                st.write("AI Layer Segmentation (ResPointNet2 — classifying objects and surfaces)...")
+                st.write("Layer Segmentation (Classifying objects and surfaces)...")
                 ply_bytes = call_segment_api(file_bytes, os.path.basename(save_path))
 
                 st.write("High-Fidelity Rendering (Generating colorized mesh)...")
-                time.sleep(0.5)   # brief visual pause
+                time.sleep(0.5)   
 
                 st.session_state.ply_bytes = ply_bytes
                 st.session_state.api_error = None
@@ -250,7 +250,7 @@ with st.container(border=True):
 
             if st.session_state.ply_bytes:
                 st.download_button(
-                    label="Download Segmented TXT",
+                    label="Download Segmented file",
                     data=st.session_state.ply_bytes,
                     file_name="prediction.txt",
                     mime="application/octet-stream",
@@ -263,8 +263,8 @@ with st.container(border=True):
                 if st.button("Open Viewer", use_container_width=True):
                     st.toast("Opening Viewer...")
             with col2:
-                pass   # Download button already above
-
+                pass 
+            
         st.write("")
         if st.button("Upload Another File", use_container_width=True):
             st.session_state.upload_state = 'idle'
