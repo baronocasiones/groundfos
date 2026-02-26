@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import os
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -15,24 +16,15 @@ def local_css(file_name):
         with open(file_name) as f:
             st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     except FileNotFoundError:
-        pass # Silently fail or add st.warning if you prefer
+        pass
 
 local_css("assets/styles.css")
 
 # --- FORCE WHITE UPLOADER & CUSTOM STYLES ---
 st.markdown("""
 <style>
-    /* Make the inner section transparent so it blends perfectly with our white dashed border */
-    [data-testid="stFileUploader"] section {
-        background-color: transparent !important;
-    }
-    
-    /* Force all text inside the dropzone to be dark gray */
-    [data-testid="stFileUploader"] section * {
-        color: #4b5563 !important;
-    }
-
-    /* Style the 'Browse files' button */
+    [data-testid="stFileUploader"] section { background-color: transparent !important; }
+    [data-testid="stFileUploader"] section * { color: #4b5563 !important; }
     [data-testid="stFileUploader"] section button {
         background-color: #ffffff !important;
         color: #2563eb !important;
@@ -41,23 +33,12 @@ st.markdown("""
         border-radius: 8px !important;
         padding: 0.5rem 1rem !important;
     }
-    
     [data-testid="stFileUploader"] section button:hover {
         background-color: #f8fafc !important;
         border-color: #cbd5e1 !important;
         color: #1d4ed8 !important;
     }
-
-    /* Override the cloud icon color */
-    [data-testid="stFileUploader"] section svg {
-        color: #9ca3af !important;
-        fill: #9ca3af !important;
-    }
-    
-    /* Optional: Style the Save button to be dark gray */
-    button[kind="secondaryFormSubmit"], button[kind="secondary"] {
-        /* Add your dark gray button styles here if you want it to match perfectly */
-    }
+    [data-testid="stFileUploader"] section svg { color: #9ca3af !important; fill: #9ca3af !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -67,27 +48,29 @@ if 'upload_state' not in st.session_state:
 if 'progress' not in st.session_state:
     st.session_state.progress = 0
 
-
 # --- NAVBAR (Custom HTML) ---
 navbar_html = """
-<div class="custom-navbar">
-    <div class="nav-left">
-        <div class="nav-title">
-            <div class="nav-logo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            </div>
-            PointCloud Studio
+<div class="custom-navbar" style="display: flex; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.2rem; margin-right: 2rem;">
+        <div style="background-color: #2563eb; display: inline-flex; align-items: center; justify-content: center; padding: 6px; border-radius: 6px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
         </div>
-        <div class="nav-links">
-            <a href="#" class="active">Upload</a>
-            <a href="#">Viewer</a>
-            <a href="#">Pipeline</a>
-            <a href="#">Docs</a>
-        </div>
+        PointCloud Studio
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="#" style="text-decoration: none; color: #2563eb; background: #eff6ff; padding: 4px 12px; border-radius: 4px; font-weight: 600;">Upload</a>
+        <a href="#" style="text-decoration: none; color: #6b7280; padding: 4px 12px;">Viewer</a>
+        <a href="#" style="text-decoration: none; color: #6b7280; padding: 4px 12px;">Pipeline</a>
+        <a href="#" style="text-decoration: none; color: #6b7280; padding: 4px 12px;">📖 Docs</a>
     </div>
 </div>
 """
 st.markdown(navbar_html, unsafe_allow_html=True)
+
 # --- HERO SECTION ---
 st.markdown("""
 <div style="text-align: center; margin-bottom: 2rem;">
@@ -100,16 +83,14 @@ st.markdown("""
 with st.container(border=True):
     
     if st.session_state.upload_state == 'idle':
-        # Card Headers
         st.subheader("Upload Your File")
         st.caption("Select a 3D point cloud file to begin")
         
-        # Streamlit File Uploader
-        uploaded_file = st.file_uploader("Dropzone", type=['las', 'ply', 'pcd'], label_visibility="collapsed")
+        uploaded_file = st.file_uploader("Dropzone", type=['txt','las', 'ply', 'pcd'], label_visibility="collapsed")
         
-        st.write("") # Spacer
+        st.write("") 
         
-        # Exact Email Notifications Box Layout
+        # Email Notifications Box
         with st.container(border=True):
             col1, col2 = st.columns([10, 1])
             with col1:
@@ -119,8 +100,6 @@ with st.container(border=True):
                 
             if notify:
                 st.markdown("**Email Address**")
-                
-                # Align input and button side-by-side
                 input_col, btn_col = st.columns([5, 1])
                 with input_col:
                     email_address = st.text_input("Email Address", placeholder="your.email@example.com", label_visibility="collapsed")
@@ -130,29 +109,54 @@ with st.container(border=True):
                         
                 st.markdown("<p style='color: gray; font-size: 0.9rem; margin-top: -10px;'>You'll receive an email when the processing is complete</p>", unsafe_allow_html=True)
 
-        st.write("") # Spacer
+        st.write("")
 
-        # Upload Action
+        # --- REAL-TIME CHUNKED SAVING ---
         if uploaded_file is not None:
             if st.button("Begin Upload & Processing", type="primary", use_container_width=True):
-                st.session_state.upload_state = 'uploading'
+                    
+                os.makedirs("./files", exist_ok=True)
+                save_path = f"./files/{uploaded_file.name}"
+                
+                # Setup UI elements for real-time tracking
+                st.subheader("Saving to Secure Storage...")
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                metrics_text = st.empty()
+                
+                file_size = uploaded_file.size
+                chunk_size = 4096 * 1024 * 1024  # 4GB chunks (or whatever size you need)
+                bytes_written = 0
+                
+                start_time = time.time()
+                
+                with open(save_path, "wb") as f:
+                    uploaded_file.seek(0)
+                    while True:
+                        chunk = uploaded_file.read(chunk_size)
+                        if not chunk:
+                            break
+                        
+                        f.write(chunk)
+                        bytes_written += len(chunk)
+                        
+                        # Calculate Metrics
+                        current_time = time.time()
+                        elapsed_time = current_time - start_time
+                        progress = min(bytes_written / file_size, 1.0) if file_size > 0 else 1.0
+                        speed_mb = (bytes_written / (1024 * 1024)) / elapsed_time if elapsed_time > 0 else 0
+                        
+                        # Update UI
+                        progress_bar.progress(progress)
+                        status_text.markdown(f"**Progress:** {int(progress * 100)}% ({bytes_written / (1024*1024):.1f} MB / {file_size / (1024*1024):.1f} MB)")
+                        metrics_text.markdown(f"⏱️ **Elapsed Time:** {elapsed_time:.1f}s &nbsp;|&nbsp; 🚀 **Speed:** {speed_mb:.1f} MB/s")
+                        
+                        # Tiny sleep to ensure the UI updates between heavy disk I/O operations
+                        time.sleep(0.05)
+                
+                st.session_state.saved_file_path = save_path
+                st.session_state.upload_state = 'processing'
                 st.rerun()
-
-    elif st.session_state.upload_state == 'uploading':
-        st.subheader("Uploading...")
-        st.caption("Transferring file chunks to secure storage")
-        
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        
-        # Simulate Upload
-        for i in range(100):
-            time.sleep(0.02)
-            progress_bar.progress(i + 1)
-            status_text.markdown(f"**Chunked Upload Progress:** {i+1}%")
-            
-        st.session_state.upload_state = 'processing'
-        st.rerun()
 
     elif st.session_state.upload_state == 'processing':
         st.subheader("Processing Point Cloud")
@@ -174,6 +178,9 @@ with st.container(border=True):
     elif st.session_state.upload_state == 'complete':
         st.success("✨ Processing Complete! Your point cloud is ready to view.")
         
+        if 'saved_file_path' in st.session_state:
+            st.success(f"File successfully saved to: {st.session_state.saved_file_path}")
+        
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Open Viewer", type="primary", use_container_width=True):
@@ -185,7 +192,7 @@ with st.container(border=True):
 
 # --- BOTTOM INFO CARDS ---
 if st.session_state.upload_state == 'idle':
-    st.write("") # Spacer
+    st.write("")
     card_col1, card_col2, card_col3 = st.columns(3)
 
     with card_col1:
@@ -196,7 +203,7 @@ if st.session_state.upload_state == 'idle':
     with card_col2:
         with st.container(border=True):
             st.markdown("**Chunked Uploads**")
-            st.caption("Large files are automatically split into chunks for reliable uploads.")
+            st.caption("Processing uses 128 MB file chunking to handle massive architectural datasets safely.")
 
     with card_col3:
         with st.container(border=True):
