@@ -104,103 +104,7 @@ def call_segment_api(file_bytes: bytes, filename: str, timeout: int = 300) -> by
     files = {"file": (filename, file_obj, "application/octet-stream")}
     response = requests.post(SEGMENT_URL, files=files, timeout=timeout)
     response.raise_for_status()
-    # ── PROCESSING (AI segmentation via API) ──────────────────────────────────
-    elif st.session_state.upload_state == "processing":
-        st.subheader("Processing Point Cloud")
-        st.caption("AI is classifying and rendering your data")
-
-        with st.status("Pipeline Active", expanded=True) as status:
-            st.write("Sending file to ResPointNet2 segmentation API...")
-
-            try:
-                save_path = st.session_state.saved_file_path
-                with open(save_path, "rb") as f:
-                    file_bytes = f.read()
-
-                st.write("AI Layer Segmentation (ResPointNet2 — classifying objects and surfaces)...")
-                ply_bytes = call_segment_api(file_bytes, os.path.basename(save_path))
-
-                st.write("High-Fidelity Rendering (Generating colorized mesh)...")
-                time.sleep(0.5)  # brief visual pause
-
-                st.session_state.ply_bytes = ply_bytes
-                st.session_state.api_error = None
-
-                status.update(label="Processing Complete!", state="complete", expanded=False)
-
-            except requests.exceptions.ConnectionError:
-                st.session_state.api_error = (
-                    f"Could not reach the segmentation API at **{SEGMENT_URL}**. "
-                    "Make sure the API is reachable."
-                )
-                status.update(label="API Unreachable", state="error", expanded=False)
-
-            except requests.exceptions.HTTPError as exc:
-                st.session_state.api_error = (
-                    f"API returned an error: **{exc.response.status_code}** — "
-                    f"{exc.response.text[:300]}"
-                )
-                status.update(label="API Error", state="error", expanded=False)
-
-            except Exception as exc:
-                st.session_state.api_error = f"Unexpected error: {exc}"
-                status.update(label="Error", state="error", expanded=False)
-
-        time.sleep(0.3)
-        st.session_state.upload_state = "complete"
-        st.rerun()
-
-    # ── COMPLETE ──────────────────────────────────────────────────────────────
-    elif st.session_state.upload_state == "complete":
-
-        if st.session_state.api_error:
-            # ── Error state ──
-            st.error(f"Segmentation failed\n\n{st.session_state.api_error}")
-
-        else:
-            # ── Success state ──
-            st.success("Processing Complete! Your segmented point cloud is ready.")
-
-            if st.session_state.saved_file_path:
-                st.info(f"Input saved to: `{st.session_state.saved_file_path}`")
-
-            if st.session_state.ply_bytes:
-                st.download_button(
-                    label="Download Segmented PLY",
-                    data=st.session_state.ply_bytes,
-                    file_name="prediction.ply",
-                    mime="application/octet-stream",
-                    type="primary",
-                    use_container_width=True,
-                )
-
-        st.write("")
-        if st.button("Upload Another File", use_container_width=True):
-            st.session_state.upload_state = "idle"
-            st.session_state.ply_bytes = None
-            st.session_state.api_error = None
-            st.rerun()
-
-# --- BOTTOM INFO CARDS ---
-if st.session_state.upload_state == "idle":
-    st.write("")
-    card_col1, card_col2, card_col3 = st.columns(3)
-
-    with card_col1:
-        with st.container(border=True):
-            st.markdown("**Supported Formats**")
-            st.caption("TXT formats are fully supported for point cloud processing.")
-
-    with card_col2:
-        with st.container(border=True):
-            st.markdown("**Chunked Uploads**")
-            st.caption("Uploads use 4 MB file chunking to handle massive architectural datasets safely.")
-
-    with card_col3:
-        with st.container(border=True):
-            st.markdown("**AI Processing**")
-            st.caption("ResPointNet2 segmentation classifies and analyses your point cloud data.")
- response.content
+    return response.content
 
 
 # --- MAIN CARD ---
@@ -300,4 +204,99 @@ with st.container(border=True):
                 st.session_state.upload_state = "processing"
                 st.rerun()
 
-   return 
+    # ── PROCESSING (AI segmentation via API) ──────────────────────────────────
+    elif st.session_state.upload_state == "processing":
+        st.subheader("Processing Point Cloud")
+        st.caption("AI is classifying and rendering your data")
+
+        with st.status("Pipeline Active", expanded=True) as status:
+            st.write("Sending file to ResPointNet2 segmentation API...")
+
+            try:
+                save_path = st.session_state.saved_file_path
+                with open(save_path, "rb") as f:
+                    file_bytes = f.read()
+
+                st.write("AI Layer Segmentation (ResPointNet2 — classifying objects and surfaces)...")
+                ply_bytes = call_segment_api(file_bytes, os.path.basename(save_path))
+
+                st.write("High-Fidelity Rendering (Generating colorized mesh)...")
+                time.sleep(0.5)  # brief visual pause
+
+                st.session_state.ply_bytes = ply_bytes
+                st.session_state.api_error = None
+
+                status.update(label="Processing Complete!", state="complete", expanded=False)
+
+            except requests.exceptions.ConnectionError:
+                st.session_state.api_error = (
+                    f"Could not reach the segmentation API at **{SEGMENT_URL}**. "
+                    "Make sure the API is reachable."
+                )
+                status.update(label="API Unreachable", state="error", expanded=False)
+
+            except requests.exceptions.HTTPError as exc:
+                st.session_state.api_error = (
+                    f"API returned an error: **{exc.response.status_code}** — "
+                    f"{exc.response.text[:300]}"
+                )
+                status.update(label="API Error", state="error", expanded=False)
+
+            except Exception as exc:
+                st.session_state.api_error = f"Unexpected error: {exc}"
+                status.update(label="Error", state="error", expanded=False)
+
+        time.sleep(0.3)
+        st.session_state.upload_state = "complete"
+        st.rerun()
+
+    # ── COMPLETE ──────────────────────────────────────────────────────────────
+    elif st.session_state.upload_state == "complete":
+
+        if st.session_state.api_error:
+            # ── Error state ──
+            st.error(f"Segmentation failed\n\n{st.session_state.api_error}")
+
+        else:
+            # ── Success state ──
+            st.success("Processing Complete! Your segmented point cloud is ready.")
+
+            if st.session_state.saved_file_path:
+                st.info(f"Input saved to: `{st.session_state.saved_file_path}`")
+
+            if st.session_state.ply_bytes:
+                st.download_button(
+                    label="Download Segmented PLY",
+                    data=st.session_state.ply_bytes,
+                    file_name="prediction.ply",
+                    mime="application/octet-stream",
+                    type="primary",
+                    use_container_width=True,
+                )
+
+        st.write("")
+        if st.button("Upload Another File", use_container_width=True):
+            st.session_state.upload_state = "idle"
+            st.session_state.ply_bytes = None
+            st.session_state.api_error = None
+            st.rerun()
+
+# --- BOTTOM INFO CARDS ---
+if st.session_state.upload_state == "idle":
+    st.write("")
+    card_col1, card_col2, card_col3 = st.columns(3)
+
+    with card_col1:
+        with st.container(border=True):
+            st.markdown("**Supported Formats**")
+            st.caption("TXT formats are fully supported for point cloud processing.")
+
+    with card_col2:
+        with st.container(border=True):
+            st.markdown("**Chunked Uploads**")
+            st.caption("Uploads use 4 MB file chunking to handle massive architectural datasets safely.")
+
+    with card_col3:
+        with st.container(border=True):
+            st.markdown("**AI Processing**")
+            st.caption("ResPointNet2 segmentation classifies and analyses your point cloud data.")
